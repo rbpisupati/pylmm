@@ -4,6 +4,7 @@ A collection of useful functions for manipulating and calculating kinship matric
 Credits: PyGWAS package 
 """
 import scipy as sp
+import numpy as np
 import sys
 import os
 import h5py
@@ -78,7 +79,7 @@ def calc_ibd_kinship(genotype, dtype='single',chunk_size=None):
 
 
 def prepare_k(k, k_accessions, accessions):
-    if k_accessions == accessions:
+    if np.array_equal(k_accessions, accessions):
         return sp.mat(k)
     indices_to_keep = []
     for acc in accessions:
@@ -142,14 +143,14 @@ def update_k_monomorphic(n_removed_snps, K, full_num_snps,dtype='single'):
 
 
 
-def load_kinship_from_file(kinship_file, accessions=None, scaled=True,n_removed_snps=None):
+def load_kinship_from_file(kinship_file, accessions=None, scaled=False,n_removed_snps=None):
     assert os.path.isfile(kinship_file), 'File not found.'
     f = h5py.File(kinship_file,'r')
     k = f['kinship'][...]
-    k_accessions = list(f['accessions'][...])
+    k_accessions = list(f['accessions'][...].astype('U'))
     n_snps = int(f['n_snps'][...])
     f.close()
-    if accessions  != None:
+    if accessions is not None:
         k = prepare_k(k, k_accessions, accessions)
     if n_removed_snps != None:
         k = update_k_monomorphic(n_removed_snps,k,n_snps)
