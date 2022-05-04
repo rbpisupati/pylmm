@@ -31,6 +31,8 @@ def matrixMult(A,B):
       linalg.blas
    except AttributeError:
       return np.dot(A,B)
+   ## Some error in blas module below, so resorting to np.dot
+   return np.dot(A,B)
 
    # If the matrices are in Fortran order then the computations will be faster
    # when using dgemm.  Otherwise, the function will copy the matrix and that takes time.
@@ -61,7 +63,7 @@ def calculateKinship(W,center=False):
    m = W.shape[1]
    keep = []
    for i in range(m):
-      mn = W[True - np.isnan(W[:,i]),i].mean()
+      mn = W[~np.isnan(W[:,i]),i].mean()
       W[np.isnan(W[:,i]),i] = mn
       vr = W[:,i].var()
       if vr == 0: continue
@@ -78,7 +80,7 @@ def calculateKinship(W,center=False):
       return K_n
    return K
 
-def GWAS(Y, X, K, Kva=[], Kve=[], X0=None, REML=True, refit=False):
+def association_mapping(Y, X, K, Kva=[], Kve=[], X0=None, REML=True, refit=False):
    """
 
       Performs a basic GWAS scan using the LMM.  This function
@@ -102,9 +104,9 @@ def GWAS(Y, X, K, Kva=[], Kve=[], X0=None, REML=True, refit=False):
       X0 = np.ones((n,1))
    
    # Remove missing values in Y and adjust associated parameters
-   v = np.isnan(Y)
-   if v.sum():
-      keep = True - v
+   v = np.isfinite(Y)
+   if (n - v.sum()) > 0:
+      keep = ~v
       keep = keep.reshape((-1,))
       Y = Y[keep]
       X = X[keep,:]
