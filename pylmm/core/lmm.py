@@ -31,8 +31,6 @@ def matrixMult(A,B):
       linalg.blas
    except AttributeError:
       return np.dot(A,B)
-   ## Some error in blas module below, so resorting to np.dot
-   return np.dot(A,B)
 
    # If the matrices are in Fortran order then the computations will be faster
    # when using dgemm.  Otherwise, the function will copy the matrix and that takes time.
@@ -191,8 +189,7 @@ class LMM:
          X0 = np.ones(len(Y)).reshape(len(Y),1)
       self.verbose = verbose
 
-      # x = True - np.isnan(Y)
-      x = (~np.isnan(Y)).astype(float)
+      x = (~np.isnan(Y))
       x = x.reshape(-1,)
       if not x.sum() == len(Y):
          if self.verbose: sys.stderr.write("Removing %d missing values from Y\n" % ((True - x).sum()))

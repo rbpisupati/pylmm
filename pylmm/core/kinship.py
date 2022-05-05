@@ -143,7 +143,7 @@ def update_k_monomorphic(n_removed_snps, K, full_num_snps,dtype='single'):
 
 
 
-def load_kinship_from_file(kinship_file, accessions=None, scaled=False,n_removed_snps=None):
+def load_kinship_from_file(kinship_file, accessions=None, scaled=True,n_removed_snps=None):
     assert os.path.isfile(kinship_file), 'File not found.'
     f = h5py.File(kinship_file,'r')
     k = f['kinship'][...]
