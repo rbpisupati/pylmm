@@ -19,7 +19,7 @@
 
 import sys
 import numpy as np
-from pylmm.core.lmm import LMM
+from pylmm.core import lmm
 
 
 def fitTwo(y,K1,K2,X0=None,wgrids=100):
@@ -38,7 +38,7 @@ def fitTwo(y,K1,K2,X0=None,wgrids=100):
 		# heritability will be estimated for linear combo of kinships
 		K = w*K1 + (1.0 - w)*K2
 		sys.stderr.write("Fitting weight %0.2f\n" % (w))
-		L = LMM(y,K,X0=X0)
+		L = lmm.LMM(y,K,X0=X0)
 		R = L.fit()
 		Res.append(R)
 		LLs.append(R[-1])
