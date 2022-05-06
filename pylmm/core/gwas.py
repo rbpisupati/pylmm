@@ -112,7 +112,7 @@ class GWAS(object):
         if output_file is not None:
             output_h5 = h5.File(output_file, 'w')
             output_h5.create_dataset('phenotype', compression="gzip", data=Y)
-            output_h5.create_dataset('num_snp', compression="gzip", data=np.array(self.g.g.num_snps))
+            output_h5.create_dataset('num_snp', compression="gzip", data=np.array([self.g.g.num_snps]) )
             output_h5.create_dataset('accessions', compression="gzip", data= np.array(self.g.accessions[self.finite_ix],dtype='S') )
             output_h5.create_dataset('pvalues', compression="gzip", data = PS, chunks = True, dtype="float", fillvalue = np.nan)
             output_h5.create_dataset('betas', compression="gzip", data = TS, chunks = True, dtype="float", fillvalue = np.nan)
