@@ -97,6 +97,7 @@ class GWAS(object):
         PS = np.zeros(0, dtype = float)
         MAF = np.zeros(0, dtype = float)
         
+        log.info("performing GWAS")
         for ef_snp_ix in np.arange(0, self.g.g.num_snps, self.chunk_size):
             ef_snp_end_ix = min(self.g.g.num_snps, ef_snp_ix + self.chunk_size)
             ef_snp = self.g.g.snps[ef_snp_ix:ef_snp_end_ix,:][:,self.finite_ix]
@@ -104,11 +105,14 @@ class GWAS(object):
             TS = np.append(TS, ef_model[0])
             PS = np.append(PS, ef_model[1])
             MAF = np.append(MAF, getMaf(ef_snp))
+            if ef_snp_ix % (self.chunk_size * 10) == 0:
+                log.info( "progress: %s SNPs" % str(ef_snp_ix + self.chunk_size) )
 
+        log.info("writing output file")
         if output_file is not None:
             output_h5 = h5.File(output_file, 'w')
             output_h5.create_dataset('phenotype', compression="gzip", data=Y)
-            output_h5.create_dataset('num_snp', compression="gzip", data=self.g.g.num_snps)
+            output_h5.create_dataset('num_snp', compression="gzip", data=np.array(self.g.g.num_snps))
             output_h5.create_dataset('accessions', compression="gzip", data= np.array(self.g.accessions[self.finite_ix],dtype='S') )
             output_h5.create_dataset('pvalues', compression="gzip", data = PS, chunks = True, dtype="float", fillvalue = np.nan)
             output_h5.create_dataset('betas', compression="gzip", data = TS, chunks = True, dtype="float", fillvalue = np.nan)
