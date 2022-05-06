@@ -128,7 +128,7 @@ class GWAS(object):
         out_data['data']['pvalue'] = np.array(out_lmm['pvalues'])
         with np.errstate(invalid='ignore'):
             out_data['data']['logpvalue'] = -np.log10(out_data['data']['pvalue'])
-        out_data['data']['beta'] = -np.log10(np.array(out_lmm['betas']))
+        out_data['data']['beta'] = np.array(out_lmm['betas'])
         out_data['data']['maf'] = np.array(out_lmm['maf'])
         out_data['data']['maf_filter'] = out_data['data']['maf'] > maf_filter
         out_data['bh_thres'] = get_bh_thres( out_data['data']['pvalue'] )
