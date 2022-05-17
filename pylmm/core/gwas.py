@@ -121,10 +121,16 @@ class GWAS(object):
         log.info("finished")
         return((TS, PS, MAF))
 
-    def load_output_result(self, output_file, maf_filter = 0.05):
-        out_lmm = h5.File(output_file, 'r')
+    def load_gwas_result(self, result_file, maf_filter = 0.05, output_file = None):
+        """
+        Function to load the results file of GWAS
+        If you provide an output file, you could also call GWAS peaks
+        """
+        log.info("loading gwas results file")
+        out_lmm = h5.File(result_file, 'r')
         out_data = {}
         out_data['data'] = pd.DataFrame( {"chr": self.g.g.chromosomes, "pos": self.g.g.positions} )
+        out_data['num_snps'] = len(self.g.g.positions)
         out_data['data']['pvalue'] = np.array(out_lmm['pvalues'])
         with np.errstate(invalid='ignore'):
             out_data['data']['logpvalue'] = -np.log10(out_data['data']['pvalue'])
@@ -132,6 +138,13 @@ class GWAS(object):
         out_data['data']['maf'] = np.array(out_lmm['maf'])
         out_data['data']['maf_filter'] = out_data['data']['maf'] > maf_filter
         out_data['bh_thres'] = get_bh_thres( out_data['data']['pvalue'] )
+        if output_file is not None:
+            # Call peaks and write peaks to the file
+            out_data['data']['pval_filter'] = out_data['data']['logpvalue'] > -np.log10(out_data['bh_thres'])
+            output_peaks = out_data['data'][out_data['data']['maf_filter'] & out_data['data']['pval_filter']]
+            if (output_peaks.shape[0] < out_data['num_snps'] / 100) and (output_peaks.shape[0] > 0):
+                ## do something about this,, more then 1% of the SNPs are highly significant.
+                output_peaks.loc[:,['chr', 'pos', 'logpvalue', 'beta']].to_csv(output_file, header = None, index = None)
         return(out_data)
 
 

@@ -19,7 +19,7 @@ __date__ = '05.05.2022'
 __updated__ = '05.05.2022'
 
 
-import os
+import os, sys
 import pandas as pd
 import numpy as np
 import argparse
@@ -59,6 +59,14 @@ def get_options(program_license,program_version_message):
     gwas_parser.add_argument("-v", "--verbose", action="store_true", dest="logDebug", default=False, help="Show verbose debugging output")
     gwas_parser.add_argument("-o", "--output", dest="outFile", default="identify_inbred", help="Output file from gwas")
     gwas_parser.set_defaults(func=perform_gwas)
+
+    peaks_parser = subparsers.add_parser('get_peaks', help="Identify peaks for GWAS")
+    peaks_parser.add_argument("-r", "--gwas_result", dest="gwas_result", help="LMM results file")
+    peaks_parser.add_argument("-g", "--geno_hdf5", default = None, dest="genotypes", help="Path to SNP matrix given in binary hdf5 file")
+    peaks_parser.add_argument("--maf_thres", default = 0.03, dest="maf_filter", help="Minor allel frequency threshold")
+    peaks_parser.add_argument("-v", "--verbose", action="store_true", dest="logDebug", default=False, help="Show verbose debugging output")
+    peaks_parser.add_argument("-o", "--output", dest="outFile", default="identify_inbred", help="Output file from gwas")
+    peaks_parser.set_defaults(func=gwas_peaker)
     
     return inOptions
 
@@ -70,9 +78,15 @@ def perform_gwas(args):
   pheno_df.iloc[:,0] = pheno_df.iloc[:,0].astype(int).astype(str)
   lmm = gwas.GWAS(args['genotypes'], phenos_df=pheno_df)
   lmm.load_kinship_file( args['kinship'] )
+  if len(lmm.finite_ix) < 50:
+    die( "provide phenotype file with information on more than 50 lines" )
 
   _ = lmm.perform_gwas( args['outFile'] )  
 
+
+def gwas_peaker(args):
+  snps_class = gwas.GWAS(args['genotypes'], phenos_df=None)
+  snps_class.load_gwas_result( args['gwas_result'], maf_filter = args['maf_filter'], output_file = args['outFile'] )
 
 
 def main():
