@@ -1,2 +1,4 @@
 *.pyc
 data/*
+*egg*
+__pycache__

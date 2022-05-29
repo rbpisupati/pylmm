@@ -104,7 +104,7 @@ class GWAS(object):
             yield( (ef_snp[ef_maf_filter,:], ef_snp_ix[ef_maf_filter]  ) )
 
 
-    def perform_mtmm(self, maf_threshold = 0.05, filter_pos_ix = None, output_file = None):
+    def perform_mtmm(self, maf_threshold = 0.05, filter_pos_ix = None, output_file = None, model_args = {}):
         """
         Perform a Multitrait mixed model using Limix
 
@@ -129,7 +129,7 @@ class GWAS(object):
         tracker = 0
         for ef_snp in self.filter_snps_by_maf(maf_threshold = maf_threshold, filter_pos_ix = filter_pos_ix):
             tracker += 1
-            ef_model = limix.qtl.scan(G = ef_snp[0].T, Y = Y, K = K, A = A, A0=A0, A1=A1, verbose=False)
+            ef_model = limix.qtl.scan(G = ef_snp[0].T, Y = Y, K = K, A = A, A0=A0, A1=A1, verbose=False, **model_args)
             pvals = np.append(pvals, ef_model.stats.loc[:,['pv10', 'pv20', 'pv21']].values, axis = 0)
             mafs = np.append(mafs, getMaf( ef_snp[0] ) )
             maf_filter_ix = np.append(maf_filter_ix, ef_snp[1] )
@@ -151,7 +151,7 @@ class GWAS(object):
 
 
 
-    def perform_lmm(self, maf_threshold = 0.05, filter_pos_ix = None, output_file = None):
+    def perform_lmm(self, maf_threshold = 0.05, filter_pos_ix = None, output_file = None, model_args = {}):
         """
         perform association mapping using simple LMM
         """
@@ -167,7 +167,7 @@ class GWAS(object):
         log.info("performing GWAS")
         tracker = 0
         for ef_snp in self.filter_snps_by_maf(maf_threshold, filter_pos_ix = filter_pos_ix): 
-            ef_model = lmm.association_mapping(Y = Y, X = ef_snp[0].T, K = K, Kva=Kva, Kve=Kve)
+            ef_model = lmm.association_mapping(Y = Y, X = ef_snp[0].T, K = K, Kva=Kva, Kve=Kve, **model_args)
             TS = np.append(TS, ef_model[0])
             PS = np.append(PS, ef_model[1])
             MAF = np.append(MAF, getMaf(ef_snp[0]))
