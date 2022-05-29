@@ -55,10 +55,20 @@ def get_options(program_license,program_version_message):
     gwas_parser = subparsers.add_parser('gwas', help="Perform a GWAS")
     gwas_parser.add_argument("-p", "--pheno_file", dest="phenotypes", help="phenotype file")
     gwas_parser.add_argument("-g", "--geno_hdf5", default = None, dest="genotypes", help="Path to SNP matrix given in binary hdf5 file")
+    gwas_parser.add_argument("--maf_thres", default = 0.03, dest="maf_filter", help="Minor allel frequency threshold")
     gwas_parser.add_argument("-k", "--kinship", default = None, dest="kinship", help="Path to kinship matrix for random")
     gwas_parser.add_argument("-v", "--verbose", action="store_true", dest="logDebug", default=False, help="Show verbose debugging output")
     gwas_parser.add_argument("-o", "--output", dest="outFile", default="identify_inbred", help="Output file from gwas")
     gwas_parser.set_defaults(func=perform_gwas)
+
+    mtmm_parser = subparsers.add_parser('mtmm', help="Perform Multi-Trait Mixed Model using Limix")
+    mtmm_parser.add_argument("-p", "--pheno_file", dest="phenotypes", help="phenotype file")
+    mtmm_parser.add_argument("-g", "--geno_hdf5", default = None, dest="genotypes", help="Path to SNP matrix given in binary hdf5 file")
+    mtmm_parser.add_argument("--maf_thres", default = 0.03, dest="maf_filter", help="Minor allel frequency threshold")
+    mtmm_parser.add_argument("-k", "--kinship", default = None, dest="kinship", help="Path to kinship matrix for random")
+    mtmm_parser.add_argument("-v", "--verbose", action="store_true", dest="logDebug", default=False, help="Show verbose debugging output")
+    mtmm_parser.add_argument("-o", "--output", dest="outFile", default="identify_inbred", help="Output file from gwas")
+    mtmm_parser.set_defaults(func=perform_mtmm)
 
     peaks_parser = subparsers.add_parser('get_peaks', help="Identify peaks for GWAS")
     peaks_parser.add_argument("-r", "--gwas_result", dest="gwas_result", help="LMM results file")
@@ -71,6 +81,17 @@ def get_options(program_license,program_version_message):
     return inOptions
 
 
+def perform_mtmm(args):
+  logging.info( "reading input phenotype file" )
+  pheno_df = pd.read_csv( args['phenotypes'], header=None )
+  pheno_df.iloc[:,0] = pheno_df.iloc[:,0].astype(int).astype(str)
+  mtmm = gwas.GWAS(args['genotypes'], phenos_df=pheno_df)
+  mtmm.load_kinship_file( args['kinship'] )
+  if len(mtmm.finite_ix) < 50:
+    die( "provide phenotype file with information on more than 50 lines" )
+  # maf_threshold = 0.05, 
+  _ = mtmm.perform_mtmm(maf_threshold=args['maf_filter'], output_file = args['outFile'] )  
+
 
 def perform_gwas(args):
   logging.info( "reading input phenotype file" )
@@ -81,7 +102,7 @@ def perform_gwas(args):
   if len(lmm.finite_ix) < 50:
     die( "provide phenotype file with information on more than 50 lines" )
 
-  _ = lmm.perform_gwas( args['outFile'] )  
+  _ = lmm.perform_lmm(maf_threshold=args['maf_filter'], output_file = args['outFile'] )  
 
 
 def gwas_peaker(args):
